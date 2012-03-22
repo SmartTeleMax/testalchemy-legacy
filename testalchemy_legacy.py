@@ -77,7 +77,13 @@ class _TraceNewObjectsExtension(SessionExtension):
 
     def after_flush(self, db, flush_context):
         for instance in db.new:
-            cls, ident = db.identity_key(instance=instance)
+            identity = db.identity_key(instance=instance)
+            #NOTE: version 0.4
+            if len(identity) == 3:
+                cls, ident, _ = identity
+            #NOTE: version 0.5-0.6
+            else:
+                cls, ident = identity
             self.history.setdefault(cls, set()).add(ident)
 
 
