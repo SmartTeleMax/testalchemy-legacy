@@ -98,6 +98,21 @@ class _ChainExtension(SessionExtension):
         return wrapper
 
 
+def _append_extension(session, extension):
+    #NOTE: version 0.4
+    if hasattr(session, 'extension'):
+        old_extension = session.extension
+        new_extension = _ChainExtension(self.old_extension, extension)
+    #NOTE: version 0.5-0.6
+    elif hasattr(session, 'extensions'):
+        old_extension = session.extensions
+        new_extension = old_extension + [extension]
+    else:
+        raise ValueError('Object %r has no attrs like '
+                         '`extension` or`extensions`' % session)
+    return old_extension, new_extension
+
+
 class Restorable(object):
 
     def __init__(self, db, watch=None):
@@ -107,18 +122,8 @@ class Restorable(object):
         self.watch = watch or db
         self.history = history = {}
         extension = _TraceNewObjectsExtension(history)
-        self._old_extension = None
-        #NOTE: version 0.4
-        if hasattr(self.watch, 'extension'):
-            self.old_extension = self.watch.extension
-            self.extension = _ChainExtension(self.old_extension, extension)
-        #NOTE: version 0.5-0.6
-        elif hasattr(self.watch, 'extensions'):
-            self.old_extension = self.watch.extensions
-            self.extension = self.old_extension + [extension]
-        else:
-            raise ValueError('Object %r has no attrs like '
-                             '`extension` or`extensions`' % self.watch)
+        self.old_extension, self.extension = _append_extension(self.watch,
+                                                                extension)
 
     def __enter__(self):
         if hasattr(self.watch, 'extension'):
