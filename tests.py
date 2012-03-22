@@ -162,7 +162,6 @@ class Test(unittest.TestCase):
             session.commit()
         self.assertEqual(self.session.query(Smi).all(), [])
 
-    @unittest.skip('update')
     def test_models_history_init(self):
         with DBHistory(self.session) as history:
             self.assertEqual(history.created, set())
@@ -178,7 +177,6 @@ class Test(unittest.TestCase):
             self.assertRaises(AssertionError, history.assert_updated, User)
             self.assertRaises(AssertionError, history.assert_deleted, User)
 
-    @unittest.skip('update')
     def test_models_history_created(self):
         session = self.session
         with DBHistory(session) as history:
@@ -202,7 +200,6 @@ class Test(unittest.TestCase):
             self.assertRaises(AssertionError, history.assert_deleted, User)
             self.assertRaises(AssertionError, history.assert_deleted_one, User)
 
-    @unittest.skip('update')
     def test_models_history_created_with_scoped_session(self):
         session = self.scoped_session()
         with DBHistory(session) as history:
@@ -226,7 +223,6 @@ class Test(unittest.TestCase):
             self.assertRaises(AssertionError, history.assert_deleted, User)
             self.assertRaises(AssertionError, history.assert_deleted_one, User)
 
-    @unittest.skip('update')
     def test_models_history_updated(self):
         session = self.session
         user = User(name='test')
@@ -254,7 +250,6 @@ class Test(unittest.TestCase):
             self.assertRaises(AssertionError, history.assert_deleted, User)
             self.assertRaises(AssertionError, history.assert_deleted_one, User)
 
-    @unittest.skip('update')
     def test_models_history_deleted(self):
         session = self.session
         user = User(name='test')
