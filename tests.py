@@ -124,6 +124,7 @@ class Test(unittest.TestCase):
         self.assertEqual(session.query(Role).all(), [])
         self.assertEqual(session.query(Smi).all(), [])
 
+    @unittest.skipIf(VER=='0.4', 'unsupported behaviour')
     def test_restorable_and_dirty_session(self):
         session = self.session
         def dirty_session():
