@@ -282,7 +282,6 @@ class Test(unittest.TestCase):
             self.assertEqual(history.assert_deleted(User, user.id), user)
             self.assertEqual(history.assert_deleted_one(User), user)
 
-    @unittest.skip('update')
     def test_sample_properties(self):
         class TestSample(Sample):
             def method(self):
@@ -292,7 +291,6 @@ class Test(unittest.TestCase):
         self.assert_attr(TestSample, 'method', sample_property)
         self.assert_attr(TestSample, '_method', types.MethodType)
 
-    @unittest.skip('update')
     def test_sample_properties_with_inheritance(self):
         class BaseTestSample(Sample):
             def method(self):
@@ -309,7 +307,6 @@ class Test(unittest.TestCase):
         self.assert_attr(TestSample, '_method', types.MethodType)
         self.assert_attr(TestSample, '_method1', types.MethodType)
 
-    @unittest.skip('update')
     def test_sample_creation(self):
         class DataSample(Sample):
             def john(self):
@@ -333,7 +330,6 @@ class Test(unittest.TestCase):
         self.assertEqual(self.session.query(Smi).all(),
                          [sample.newspaper])
 
-    @unittest.skip('update')
     def test_sample_creation_with_scoped_session(self):
         session = self.scoped_session()
         class DataSample(Sample):
@@ -356,7 +352,6 @@ class Test(unittest.TestCase):
         self.assertEqual(session.query(Role).all(), [sample.newspaper_editor])
         self.assertEqual(session.query(Smi).all(), [sample.newspaper])
 
-    @unittest.skip('update')
     def test_sample_creation_with_autocommit(self):
         session = self.Session(autocommit=True)
         class DataSample(Sample):
@@ -379,7 +374,6 @@ class Test(unittest.TestCase):
         self.assertEqual(session.query(Role).all(), [sample.newspaper_editor])
         self.assertEqual(session.query(Smi).all(), [sample.newspaper])
 
-    @unittest.skip('update')
     def test_sample_creation_using_scopedsession_with_autocommit(self):
         session = self.scoped_session(autocommit=True)
         class DataSample(Sample):
@@ -402,7 +396,6 @@ class Test(unittest.TestCase):
         self.assertEqual(session.query(Role).all(), [sample.newspaper_editor])
         self.assertEqual(session.query(Smi).all(), [sample.newspaper])
 
-    @unittest.skip('update')
     def test_sample_creation_with_mixins(self):
         class SampleCat(Sample):
             def cat1(self):
@@ -430,7 +423,6 @@ class Test(unittest.TestCase):
         self.assertEqual(self.session.query(Smi).all(),
                          [sample.newspaper])
 
-    @unittest.skip('update')
     def test_sample_with_mixin(self):
         class Mixin1(object):
             def method(self):
@@ -456,7 +448,6 @@ class Test(unittest.TestCase):
         self.assert_attr(TestSample, '_method1', types.MethodType)
         self.assert_attr(TestSample, '_method2', types.MethodType)
 
-    @unittest.skip('update')
     def test_sample_with_inheritance_in_mixins(self):
         class Mixin1(object):
             def method(self):
@@ -482,7 +473,6 @@ class Test(unittest.TestCase):
         self.assert_attr(TestSample, '_method1', types.MethodType)
         self.assert_attr(TestSample, '_method2', types.MethodType)
 
-    @unittest.skip('update')
     def test_sample_with_oldstyle_mixin(self):
         class Mixin1(object):
             def method(self):
@@ -506,7 +496,6 @@ class Test(unittest.TestCase):
         self.assert_attr(TestSample, '_method1', types.MethodType)
         self.assert_attr(TestSample, '_method2', types.MethodType)
 
-    @unittest.skip('update')
     def test_sample_method_overriding(self):
         class BaseTestSample(Sample):
             def category(self):
@@ -521,7 +510,6 @@ class Test(unittest.TestCase):
                          'overrided category')
         self.assertEqual(self.session.query(Category).count(), 1)
 
-    @unittest.skip('update')
     def test_sample_method_overriding_with_call_to_base(self):
         class BaseTestSample(Sample):
             def category(self):
@@ -539,7 +527,6 @@ class Test(unittest.TestCase):
                          'overrided category')
         self.assertEqual(self.session.query(Category).count(), 1)
 
-    @unittest.skip('update')
     def test_class_attr_assigning(self):
         class LibSample(Sample):
             def method(self):
@@ -549,7 +536,6 @@ class Test(unittest.TestCase):
         self.assert_attr(LibSample, 'method', sample_property)
         self.assert_attr(TestSample, 'method', sample_property)
 
-    @unittest.skip('update')
     def test_assigning_class_attr_with_new_name(self):
         class LibSample(Sample):
             def method2(self):
@@ -561,7 +547,6 @@ class Test(unittest.TestCase):
         self.assert_attr(TestSample, 'method', sample_property)
         self.assert_attr(TestSample.method, 'name', value='method')
 
-    @unittest.skip('update')
     def test_sample_attr_returns_list(self):
         class DataSample(Sample):
             def categories(self):
@@ -573,7 +558,6 @@ class Test(unittest.TestCase):
         self.assertEqual(set(self.session.query(Category).all()),
                          set(sample.categories))
 
-    @unittest.skip('update')
     def test_sample_attr_returns_tuple(self):
         class DataSample(Sample):
             def categories(self):
