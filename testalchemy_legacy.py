@@ -70,7 +70,7 @@ class Sample(object):
         self.db.commit()
 
 
-class _HistoryExtension(SessionExtension):
+class _TraceNewObjectsExtension(SessionExtension):
 
     def __init__(self, history):
         self.history = history
@@ -106,7 +106,7 @@ class Restorable(object):
         self.db = db
         self.watch = watch or db
         self.history = history = {}
-        extension = _HistoryExtension(history)
+        extension = _TraceNewObjectsExtension(history)
         self._old_extension = None
         #NOTE: version 0.4
         if hasattr(self.watch, 'extension'):
