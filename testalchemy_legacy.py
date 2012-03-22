@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import types
-from sqlalchemy.orm.session import util, Session, SessionExtension
+from sqlalchemy.orm.session import Session, SessionExtension
 from sqlalchemy.orm.scoping import ScopedSession
 
 __all__ = ['Sample', 'Restorable', 'DBHistory']
