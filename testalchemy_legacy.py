@@ -140,7 +140,6 @@ class Restorable(object):
         #NOTE: version 0.5-0.6
         else:
             db.expunge_all()
-        db.expunge_all()
         old_autoflush = db.autoflush
         db.autoflush = False
         if hasattr(db, 'autocommit') and db.autocommit:
