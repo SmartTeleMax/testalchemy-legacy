@@ -90,11 +90,13 @@ class _ChainExtension(SessionExtension):
         attrs = []
         for e in SessionExtension.__getattribute__(self, 'extensions'):
             attrs.append(getattr(e, name, None))
-        if not filter(None, attrs):
+        attrs = filter(None, attrs)
+        if not attrs:
             raise AttributeError(name)
         def wrapper(*args, **kwargs):
             for func in attrs:
                 func(*args, **kwargs)
+        wrapper.func_name = name
         return wrapper
 
 
