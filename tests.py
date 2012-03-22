@@ -9,9 +9,12 @@ except ImportError:
     import sqlalchemy.exceptions as exc
 from sqlalchemy import (
         MetaData, Table, Column, String, Integer, ForeignKey,
-        create_engine, UniqueConstraint)
+        create_engine, UniqueConstraint, __version__)
 from sqlalchemy.orm import relation, sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
+
+
+VER=__version__[:3]
 
 
 metadata = MetaData()
@@ -140,6 +143,7 @@ class Test(unittest.TestCase):
         self.assertEqual(session.query(Role).all(), [])
         self.assertEqual(session.query(Smi).all(), [])
 
+    @unittest.skipIf(VER=='0.4', 'unsupported behaviour')
     def test_restorable_with_autocommit(self):
         # `autocommit` affects the `Session` constructor
         session = self.Session(autocommit=True)
@@ -151,6 +155,7 @@ class Test(unittest.TestCase):
             session.commit()
         self.assertEqual(self.session.query(Smi).all(), [])
 
+    @unittest.skipIf(VER=='0.4', 'unsupported behaviour')
     def test_restorable_with_scoped_session_and_autocommit(self):
         # `autocommit` affects the `Session` constructor
         session = self.scoped_session(autocommit=True)
@@ -347,6 +352,7 @@ class Test(unittest.TestCase):
         self.assertEqual(session.query(Role).all(), [sample.newspaper_editor])
         self.assertEqual(session.query(Smi).all(), [sample.newspaper])
 
+    @unittest.skipIf(VER=='0.4', 'unsupported behaviour')
     def test_sample_creation_with_autocommit(self):
         session = self.Session(autocommit=True)
         class DataSample(Sample):
@@ -369,6 +375,7 @@ class Test(unittest.TestCase):
         self.assertEqual(session.query(Role).all(), [sample.newspaper_editor])
         self.assertEqual(session.query(Smi).all(), [sample.newspaper])
 
+    @unittest.skipIf(VER=='0.4', 'unsupported behaviour')
     def test_sample_creation_using_scopedsession_with_autocommit(self):
         session = self.scoped_session(autocommit=True)
         class DataSample(Sample):
