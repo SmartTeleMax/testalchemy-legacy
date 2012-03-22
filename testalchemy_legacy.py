@@ -64,7 +64,7 @@ class Sample(object):
         self.__dict__.update(kwargs)
 
     def create_all(self):
-        if self.db.autocommit:
+        if hasattr(self.db, 'autocommit') and self.db.autocommit:
             self.db.begin()
         map(lambda name: getattr(self, name), dir(self))
         self.db.commit()
