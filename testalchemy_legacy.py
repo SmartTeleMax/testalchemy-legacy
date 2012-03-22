@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import types
-from sqlalchemy import event
-from sqlalchemy.orm import util, Session, ScopedSession
+from sqlalchemy.orm.session import util, Session, SessionExtension
+from sqlalchemy.orm.scoping import ScopedSession
 
 __all__ = ['Sample', 'Restorable', 'DBHistory']
 
@@ -19,9 +19,10 @@ class sample_property(object):
             return self
         result = self.method(inst)
         if isinstance(result, (list, tuple)):
-            inst.db.add_all(result)
+            for instance in result:
+                inst.db.save(instance)
         else:
-            inst.db.add(result)
+            inst.db.save(result)
         inst.used_properties.add(self.name)
         setattr(inst, self.name, result)
         return result
@@ -64,6 +65,34 @@ class Sample(object):
         self.db.commit()
 
 
+class _HistoryExtension(SessionExtension):
+
+    def __init__(self, history):
+        self.history = history
+
+    def after_flush(self, db, flush_context):
+        for instance in db.new:
+            cls, ident = db.identity_key(instance=instance)
+            self.history.setdefault(cls, set()).add(ident)
+
+
+class _ChainExtension(SessionExtension):
+
+    def __init__(self, *extensions):
+        self.extensions = extensions
+
+    def __getattribute__(self, name):
+        attrs = []
+        for e in SessionExtension.__getattribute__(self, 'extensions'):
+            attrs.append(getattr(e, name, None))
+        if not filter(None, attrs):
+            raise AttributeError(name)
+        def wrapper(*args, **kwargs):
+            for func in attrs:
+                func(*args, **kwargs)
+        return wrapper
+
+
 class Restorable(object):
 
     def __init__(self, db, watch=None):
@@ -71,18 +100,40 @@ class Restorable(object):
             db = db.registry()
         self.db = db
         self.watch = watch or db
-        self.history = {}
+        self.history = history = {}
+        extension = _HistoryExtension(history)
+        self._old_extension = None
+        #NOTE: version 0.4
+        if hasattr(self.watch, 'extension'):
+            self.old_extension = self.watch.extension
+            self.extension = _ChainExtension(self.old_extension, extension)
+        #NOTE: version 0.5-0.6
+        elif hasattr(self.watch, 'extensions'):
+            self.old_extension = self.watch.extensions
+            self.extension = self.old_extension + [extension]
+        else:
+            raise ValueError('Object %r has no attrs like '
+                             '`extension` or`extensions`' % self.watch)
 
     def __enter__(self):
-        event.listen(self.watch, 'after_flush', self.after_flush)
+        if hasattr(self.watch, 'extension'):
+            self.watch.extension = self.extension
+        else:
+            self.watch.extensions = self.extension
 
     def __exit__(self, type, value, traceback):
         db = self.db
         db.rollback()
+        #NOTE: version 0.4
+        if hasattr(db, 'clear'):
+            db.clear()
+        #NOTE: version 0.5-0.6
+        else:
+            db.expunge_all()
         db.expunge_all()
         old_autoflush = db.autoflush
         db.autoflush = False
-        if db.autocommit:
+        if hasattr(db, 'autocommit') and db.autocommit:
             db.begin()
         for cls, ident_set in self.history.items():
             for ident in ident_set:
@@ -92,13 +143,11 @@ class Restorable(object):
         db.commit()
         db.close()
         db.autoflush = old_autoflush
-        event.Events._remove(self.watch, 'after_flush',
-                             self.after_flush)
+        if hasattr(self.watch, 'extension'):
+            self.watch.extension = self.old_extension
+        else:
+            self.watch.extensions = self.old_extension
 
-    def after_flush(self, db, flush_context, instances=None):
-        for instance in db.new:
-            cls, ident = util.identity_key(instance=instance)
-            self.history.setdefault(cls, set()).add(ident)
 
 
 class DBHistory(object):
