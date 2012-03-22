@@ -159,6 +159,26 @@ class Restorable(object):
             self.watch.extensions = self.old_extension
 
 
+class _HistoryExtension(SessionExtension):
+
+    def __init__(self, obj):
+        self.obj = obj
+
+    def after_flush(self, db, flush_context):
+        history = self.obj
+        def identityset_to_set(obj):
+            return set(obj._members.values())
+        def populate_idents_dict(idents, objects):
+            for obj in objects:
+                ident = db.identity_key(instance=obj)
+                idents.setdefault(ident[0], set()).add(ident[1])
+        history.created = history.created.union(identityset_to_set(db.new))
+        history.updated = history.updated.union(identityset_to_set(db.dirty))
+        history.deleted = history.deleted.union(identityset_to_set(db.deleted))
+        populate_idents_dict(history.created_idents, history.created)
+        populate_idents_dict(history.updated_idents, history.updated)
+        populate_idents_dict(history.deleted_idents, history.deleted)
+
 
 class DBHistory(object):
 
@@ -175,7 +195,10 @@ class DBHistory(object):
         self.created_idents = {}
         self.updated_idents = {}
         self.deleted_idents = {}
+        extension = _HistoryExtension(self)
 
+        self.old_extension, self.extension = _append_extension(self._target,
+                                                               extension)
     def last(self, model_cls, mode):
         assert mode in ('created', 'updated', 'deleted')
         if mode == 'deleted':
@@ -202,7 +225,7 @@ class DBHistory(object):
         if ident is not None:
             ident = ident if isinstance(ident, (tuple, list)) else (ident,)
             item = [i for i in dataset \
-                    if util.identity_key(instance=i)[1] == ident]
+                    if self._target.identity_key(instance=i)[1] == ident]
             assert item,'No insatances of %s with identity %r were %s' % \
                    (model_cls, ident, mode)
             return item[0]
@@ -246,23 +269,14 @@ class DBHistory(object):
         self.deleted_idents = {}
 
     def __enter__(self):
-        event.listen(self._target, 'after_flush', self._after_flush)
+        if hasattr(self._target, 'extension'):
+            self._target.extension = self.extension
+        else:
+            self._target.extensions = self.extension
         return self
 
     def __exit__(self, type, value, traceback):
-        event.Events._remove(self._target, 'after_flush', self._after_flush)
-
-    def _populate_idents_dict(self, idents, objects):
-        for obj in objects:
-            ident = util.identity_key(instance=obj)
-            idents.setdefault(ident[0], set()).add(ident[1])
-
-    def _after_flush(self, db, flush_context, instances=None):
-        def identityset_to_set(obj):
-            return set(obj._members.values())
-        self.created = self.created.union(identityset_to_set(db.new))
-        self.updated = self.updated.union(identityset_to_set(db.dirty))
-        self.deleted = self.deleted.union(identityset_to_set(db.deleted))
-        self._populate_idents_dict(self.created_idents, self.created)
-        self._populate_idents_dict(self.updated_idents, self.updated)
-        self._populate_idents_dict(self.deleted_idents, self.deleted)
+        if hasattr(self._target, 'extension'):
+            self._target.extension = self.old_extension
+        else:
+            self._target.extensions = self.old_extension
