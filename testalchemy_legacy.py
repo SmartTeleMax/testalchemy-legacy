@@ -102,7 +102,7 @@ def _append_extension(session, extension):
     #NOTE: version 0.4
     if hasattr(session, 'extension'):
         old_extension = session.extension
-        new_extension = _ChainExtension(self.old_extension, extension)
+        new_extension = _ChainExtension(old_extension, extension)
     #NOTE: version 0.5-0.6
     elif hasattr(session, 'extensions'):
         old_extension = session.extensions
