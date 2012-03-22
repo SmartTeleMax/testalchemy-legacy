@@ -28,11 +28,20 @@ class User(Model):
     roles = relation('Role', passive_deletes='all')
 
 
+roles_category = Table('roles_category', metadata, 
+    Column('role_id', ForeignKey('Role.id', ondelete='CASCADE'),
+           nullable=False),
+    Column('category_id', ForeignKey('Category.id', ondelete='CASCADE'), 
+           nullable=False),
+    UniqueConstraint('role_id', 'category_id')
+)
+
+
 class Category(Model):
     __tablename__ = 'Category'
     id = Column(Integer, primary_key=True)
     name = Column(String(255), unique=True)
-    roles = relation('Role', secondary='roles_category', passive_deletes='all')
+    roles = relation('Role', secondary=roles_category, passive_deletes='all')
 
 
 class Role(Model):
@@ -40,20 +49,10 @@ class Role(Model):
     id = Column(Integer, primary_key=True)
     user_id = Column(ForeignKey(User.id, ondelete='CASCADE'), nullable=False)
     user = relation(User)
-    categories = relation(Category, secondary='roles_category',
+    categories = relation(Category, secondary=roles_category,
                           passive_deletes=True)
     smi_id = Column(ForeignKey('Smi.id', ondelete='CASCADE'), nullable=False)
     smi = relation('Smi')
-
-
-roles_category = Table('roles_category', metadata, 
-    Column('role_id', ForeignKey(Role.id, ondelete='CASCADE'),
-           nullable=False),
-    Column('category_id', ForeignKey(Category.id, ondelete='CASCADE'), 
-           nullable=False),
-    UniqueConstraint('role_id', 'category_id')
-)
-
 
 
 class Smi(Model):
@@ -61,7 +60,6 @@ class Smi(Model):
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
     roles = relation(Role, passive_deletes='all')
-
 
 
 EMPTY = object()
