@@ -2,7 +2,7 @@
 
 import types
 import unittest
-from testalchemy import Sample, Restorable, DBHistory, sample_property
+from testalchemy_legacy import Sample, Restorable, DBHistory, sample_property
 import sqlalchemy.exc
 from sqlalchemy import (
         MetaData, Table, Column, String, Integer, ForeignKey,
