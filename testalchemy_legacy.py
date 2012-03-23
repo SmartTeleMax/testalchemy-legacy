@@ -7,6 +7,14 @@ from sqlalchemy.orm.scoping import ScopedSession
 __all__ = ['Sample', 'Restorable', 'DBHistory']
 
 
+def _implicit_begin(session):
+    if hasattr(session, 'autocommit') and not session.autocommit:
+        return
+    if hasattr(session, 'transactional') and session.transactional:
+        return
+    session.begin()
+
+
 class sample_property(object):
 
     def __init__(self, method, name=None):
@@ -64,8 +72,7 @@ class Sample(object):
         self.__dict__.update(kwargs)
 
     def create_all(self):
-        if hasattr(self.db, 'autocommit') and self.db.autocommit:
-            self.db.begin()
+        _implicit_begin(self.db)
         map(lambda name: getattr(self, name), dir(self))
         self.db.commit()
 
@@ -150,8 +157,7 @@ class Restorable(object):
             db.expunge_all()
         old_autoflush = db.autoflush
         db.autoflush = False
-        if hasattr(db, 'autocommit') and db.autocommit:
-            db.begin()
+        _implicit_begin(db)
         for cls, ident_set in self.history.items():
             for ident in ident_set:
                 instance = db.query(cls).get(ident)
