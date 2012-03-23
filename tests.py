@@ -166,6 +166,26 @@ class Test(unittest.TestCase):
             session.commit()
         self.assertEqual(self.session.query(Smi).all(), [])
 
+    @unittest.skipIf(VER!='0.4', 'unsupported behaviour')
+    def test_restorable_with_manual_begin(self):
+        session = self.Session(transactional=False)
+        with Restorable(session):
+            session.begin()
+            smi = Smi(name='newspaper')
+            session.add(smi)
+            session.commit()
+        self.assertEqual(self.session.query(Smi).all(), [])
+
+    @unittest.skipIf(VER!='0.4', 'unsupported behaviour')
+    def test_restorable_with_scoped_session_and_manual_begin(self):
+        session = self.scoped_session(transactional=False)
+        with Restorable(session):
+            session.begin()
+            smi = Smi(name='newspaper')
+            session.add(smi)
+            session.commit()
+        self.assertEqual(self.session.query(Smi).all(), [])
+
     def test_models_history_init(self):
         with DBHistory(self.session) as history:
             self.assertEqual(history.created, set())
@@ -377,6 +397,52 @@ class Test(unittest.TestCase):
     @unittest.skipIf(VER=='0.4', 'unsupported behaviour')
     def test_sample_creation_using_scopedsession_with_autocommit(self):
         session = self.scoped_session(autocommit=True)
+        class DataSample(Sample):
+            def john(self):
+                return User(name='john')
+            def cat1(self):
+                return Category(name='cat1')
+            def cat2(self):
+                return Category(name='cat2')
+            def newspaper_editor(self):
+                return Role(user=self.john, smi=self.newspaper,
+                            categories=[self.cat1, self.cat2])
+            def newspaper(self):
+                return Smi(name='newspaper')
+        sample = DataSample(session)
+        sample.create_all()
+        self.assertEqual(session.query(User).all(), [sample.john])
+        self.assertEqual(set(session.query(Category).all()),
+                         set([sample.cat1, sample.cat2]))
+        self.assertEqual(session.query(Role).all(), [sample.newspaper_editor])
+        self.assertEqual(session.query(Smi).all(), [sample.newspaper])
+
+    @unittest.skipIf(VER!='0.4', 'unsupported behaviour')
+    def test_sample_creation_with_manual_begin(self):
+        session = self.Session(transactional=False)
+        class DataSample(Sample):
+            def john(self):
+                return User(name='john')
+            def cat1(self):
+                return Category(name='cat1')
+            def cat2(self):
+                return Category(name='cat2')
+            def newspaper_editor(self):
+                return Role(user=self.john, smi=self.newspaper,
+                            categories=[self.cat1, self.cat2])
+            def newspaper(self):
+                return Smi(name='newspaper')
+        sample = DataSample(session)
+        sample.create_all()
+        self.assertEqual(session.query(User).all(), [sample.john])
+        self.assertEqual(set(session.query(Category).all()),
+                         set([sample.cat1, sample.cat2]))
+        self.assertEqual(session.query(Role).all(), [sample.newspaper_editor])
+        self.assertEqual(session.query(Smi).all(), [sample.newspaper])
+
+    @unittest.skipIf(VER!='0.4', 'unsupported behaviour')
+    def test_sample_creation_using_scopedsession_with_manual_begin(self):
+        session = self.scoped_session(transactional=False)
         class DataSample(Sample):
             def john(self):
                 return User(name='john')
